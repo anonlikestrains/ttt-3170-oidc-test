@@ -12,11 +12,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Show OIDC claims
-        uses: github/actions-oidc-debugger@main
-        with:
-          audience: sts.amazonaws.com
-      
+      - name: Show OIDC subject
+        shell: bash
+        run: |
+          TOKEN=$(curl -sSf \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" \
+            | jq -r '.value')
+
+          PAYLOAD=$(echo "$TOKEN" | cut -d '.' -f2)
+          PAYLOAD="${PAYLOAD//-/+}"
+          PAYLOAD="${PAYLOAD//_/\/}"
+
+          case $((${#PAYLOAD} % 4)) in
+            2) PAYLOAD="${PAYLOAD}==" ;;
+            3) PAYLOAD="${PAYLOAD}=" ;;
+          esac
+
+          echo "$PAYLOAD" | base64 -d | jq '{aud, sub}'
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
