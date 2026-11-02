@@ -5,37 +5,21 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: none
 
 jobs:
   oidc-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Show OIDC subject
-        shell: bash
-        run: |
-          TOKEN=$(curl -sSf \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" \
-            | jq -r '.value')
-
-          PAYLOAD=$(echo "$TOKEN" | cut -d '.' -f2)
-          PAYLOAD="${PAYLOAD//-/+}"
-          PAYLOAD="${PAYLOAD//_/\/}"
-
-          case $((${#PAYLOAD} % 4)) in
-            2) PAYLOAD="${PAYLOAD}==" ;;
-            3) PAYLOAD="${PAYLOAD}=" ;;
-          esac
-
-          echo "$PAYLOAD" | base64 -d | jq '{aud, sub}'
-
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@v6.3.0
         with:
           role-to-assume: arn:aws:iam::550644673161:role/TTT3170-GitHubActions-Test
           aws-region: eu-west-2
+          allowed-account-ids: 550644673161
+          role-session-name: TTT3170-${{ github.run_id }}
+          role-duration-seconds: 900
 
       - name: Confirm AWS identity
         run: aws sts get-caller-identity
