@@ -17,7 +17,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::550644673161:role/TTT3170-GitHubActions-Test
           aws-region: eu-west-2
-          allowed-account-ids: 550644673162
+          allowed-account-ids: 550644673161
           role-session-name: TTT3170-${{ github.run_id }}
           role-duration-seconds: 900
 
